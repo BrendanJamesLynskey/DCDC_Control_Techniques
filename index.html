@@ -1178,8 +1178,8 @@
             <p class="dim" style="font-size:0.5em;">Research: ETH Zurich, CPES Virginia Tech</p>
         </div>
         <div class="card">
-            <h3 style="color:var(--amber);">Coupled-Inductor Multi-Phase</h3>
-            <p>Magnetically coupled inductors in multi-phase converters improve transient response and reduce ripple beyond what discrete inductors achieve. Requires tight coupling control but enables faster di/dt.</p>
+            <h3 style="color:var(--amber);">Coupled-Inductor &amp; TLVR</h3>
+            <p>Magnetically coupled inductors, trans-inductor voltage regulators (TLVR), and non-coupled loop (NCL) architectures improve transient response 3–5× beyond discrete inductors. See dedicated slide for CL / TLVR / NCL comparison.</p>
             <p class="dim" style="font-size:0.5em;">Server VRMs: Infineon, Renesas, MPS</p>
         </div>
     </div>
@@ -1304,10 +1304,67 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SLIDE 23b: AI ACCELERATOR POWER DELIVERY -->
+<!-- SLIDE 23: COUPLED-INDUCTOR TECHNIQUES -->
 <!-- ============================================================ -->
 <section>
     <div class="slide-label">23</div>
+    <h2>Coupled-Inductor Techniques</h2>
+    <p>In multi-phase converters, the choice of magnetic structure profoundly affects transient response, ripple, efficiency, and power density. Three architectures dominate modern VRM design.</p>
+
+    <div class="two-col" style="margin-top:0.4em;">
+        <div>
+            <h3>Traditional Coupled Inductor (CL)</h3>
+            <p>Two or more phase windings share a single magnetic core with inverse coupling (dots opposite). The leakage inductance sets the per-phase ripple current, while the mutual inductance appears only during transients.</p>
+            <ul>
+                <li><strong>Steady-state:</strong> each phase sees only leakage inductance L<sub>LK</sub> — high ripple current allows fast current slew during load steps</li>
+                <li><strong>Transient:</strong> magnetising inductance L<sub>M</sub> adds to the effective inductance seen by the output, reducing voltage deviation</li>
+                <li>Net effect: faster transient response <em>and</em> lower output ripple than discrete inductors of equivalent size</li>
+                <li>Coupling coefficient k typically 0.7–0.9; too tight and phase-to-phase current sharing degrades</li>
+            </ul>
+            <p class="dim" style="font-size:0.5em;">Würth WE-MCRI, Coilcraft MPI series, Cyntec coupled modules</p>
+
+            <h3 style="margin-top:0.4em;">Design trade-offs</h3>
+            <ul>
+                <li>Strong coupling (high k) → better transient, but higher steady-state ripple and tighter layout requirements</li>
+                <li>Weak coupling (low k) → approaches discrete inductor behaviour; diminishing returns</li>
+                <li>Magnetics design complexity increases — must model leakage and mutual inductances accurately</li>
+                <li>Core saturation must be evaluated per-phase, not just total current</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Trans-Inductor Voltage Regulator (TLVR)</h3>
+            <p>A hybrid topology patented by Intel for server VRMs. Each phase has its own discrete inductor, but a secondary winding on each core is connected in a series loop across all phases — creating magnetic coupling without a shared core.</p>
+            <ul>
+                <li>The secondary loop inductance L<sub>LOOP</sub> provides the transient coupling path</li>
+                <li>During a load step, current flows through the secondary loop, effectively reducing the per-phase inductance and enabling 3–5× faster di/dt</li>
+                <li>In steady state, the secondary loop carries zero net current — no additional losses</li>
+                <li>Uses standard off-the-shelf inductors with a secondary winding — easier to source than monolithic coupled inductors</li>
+                <li>A series loop resistor R<sub>LOOP</sub> damps oscillations and sets the transient coupling decay time</li>
+            </ul>
+            <p class="dim" style="font-size:0.5em;">Intel VR14/VR15 spec, Infineon XDPE192C3B designs</p>
+
+            <h3 style="margin-top:0.4em;">Non-Coupled Loop (NCL)</h3>
+            <p>A further evolution that eliminates magnetic coupling entirely. Each phase inductor has a secondary winding, but the loop is routed so that phase currents sum to zero in the secondary — providing transient current sharing without the frequency-dependent losses of TLVR.</p>
+            <ul>
+                <li>No mutual coupling means no coupling-coefficient sensitivity — more robust across inductor tolerances</li>
+                <li>The loop acts as a current-balancing network, improving phase-current sharing during both transients and steady state</li>
+                <li>Lower AC losses in the secondary loop vs TLVR at high switching frequencies (&gt;1 MHz)</li>
+                <li>Emerging in next-gen GPU and AI accelerator VRMs where phase counts exceed 16</li>
+            </ul>
+            <p class="dim" style="font-size:0.5em;">MPS MP2857/MP2971 reference designs, research: CPES Virginia Tech</p>
+        </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:0.3em;">
+        <p><strong class="accent-amber">Evolution path:</strong> Discrete inductors → Coupled inductors (CL) → TLVR → NCL. Each step trades magnetic complexity for improved transient performance. Modern AI-class VRMs (&gt;500 A) increasingly use TLVR or NCL to meet sub-microsecond load-step specifications.</p>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 24: AI ACCELERATOR POWER DELIVERY -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">24</div>
     <h2>Powering AI Accelerators</h2>
     <p>Modern AI GPUs and custom accelerators (NVIDIA H100/B200, Google TPU, AMD Instinct) present extreme power delivery challenges that push control techniques to their limits.</p>
 
@@ -1353,10 +1410,10 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SLIDE 24: FUTURE DIRECTIONS -->
+<!-- SLIDE 25: FUTURE DIRECTIONS -->
 <!-- ============================================================ -->
 <section>
-    <div class="slide-label">24</div>
+    <div class="slide-label">25</div>
     <h2>Future Directions</h2>
 
     <div class="card-grid card-grid-2" style="margin-top:0.5em;">
@@ -1384,10 +1441,10 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SLIDE 25: SUMMARY -->
+<!-- SLIDE 26: SUMMARY -->
 <!-- ============================================================ -->
 <section>
-    <div class="slide-label">25</div>
+    <div class="slide-label">26</div>
     <h2>Summary &amp; Key Takeaways</h2>
 
     <div class="two-col" style="margin-top:0.5em;">
@@ -1429,10 +1486,10 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SLIDE 26: REFERENCES -->
+<!-- SLIDE 27: REFERENCES -->
 <!-- ============================================================ -->
 <section>
-    <div class="slide-label">26</div>
+    <div class="slide-label">27</div>
     <h2>References &amp; Resources</h2>
 
     <div class="two-col" style="margin-top:0.5em;">
