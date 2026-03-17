@@ -37,7 +37,18 @@
     color: var(--text-primary);
 }
 .reveal .slides { text-align: left; }
-.reveal .slides section { background: var(--bg-primary); padding-top: 0.3em !important; box-sizing: border-box; }
+.reveal .slides section {
+    background: var(--bg-primary);
+    padding-top: 0.3em !important;
+    box-sizing: border-box;
+    overflow-y: auto !important;
+}
+/* Thin styled scrollbar */
+.reveal .slides section::-webkit-scrollbar { width: 6px; }
+.reveal .slides section::-webkit-scrollbar-track { background: transparent; }
+.reveal .slides section::-webkit-scrollbar-thumb { background: var(--amber-dim); border-radius: 3px; }
+.reveal .slides section::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+.reveal .slides section { scrollbar-width: thin; scrollbar-color: var(--amber-dim) transparent; }
 
 .reveal h1, .reveal h2, .reveal h3 {
     font-family: 'Playfair Display', serif;
