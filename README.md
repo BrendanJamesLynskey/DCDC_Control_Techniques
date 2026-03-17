@@ -33,9 +33,10 @@ An interactive Reveal.js presentation covering all major control techniques for 
 | 21 | Compensation Design | Type II and Type III compensator overview |
 | 22 | EMI & Frequency Spectrum | Fixed vs variable frequency EMI signatures and filter design |
 | 23 | Multi-Phase Converters | Interleaving, phase shedding, control compatibility |
-| 24 | Future Directions | GaN/SiC, integrated modules, 48V PoL, autonomous tuning |
-| 25 | Summary & Key Takeaways | Decision tree, design guidelines, further reading |
-| 26 | References & Resources | Textbooks, application notes, simulation tools |
+| 24 | Powering AI Accelerators | Multi-phase VRMs for GPUs/TPUs, 48V-to-core, predictive control, DrMOS |
+| 25 | Future Directions | GaN/SiC, integrated modules, 48V PoL, autonomous tuning |
+| 26 | Summary & Key Takeaways | Decision tree, design guidelines, further reading |
+| 27 | References & Resources | Textbooks, application notes, simulation tools |
 
 ---
 
