@@ -37,7 +37,7 @@
     color: var(--text-primary);
 }
 .reveal .slides { text-align: left; }
-.reveal .slides section { background: var(--bg-primary); padding-top: 0.5em !important; }
+.reveal .slides section { background: var(--bg-primary); padding-top: 0.3em !important; box-sizing: border-box; }
 
 .reveal h1, .reveal h2, .reveal h3 {
     font-family: 'Playfair Display', serif;
@@ -46,11 +46,11 @@
     letter-spacing: -0.02em;
 }
 .reveal h1 { font-size: 2.6em; color: var(--amber); }
-.reveal h2 { font-size: 1.8em; color: var(--amber); margin-bottom: 0.5em; }
-.reveal h3 { font-size: 1.1em; color: var(--green); margin-bottom: 0.3em; }
+.reveal h2 { font-size: 1.6em; color: var(--amber); margin-bottom: 0.3em; margin-top: 0; }
+.reveal h3 { font-size: 1.0em; color: var(--green); margin-bottom: 0.2em; }
 
-.reveal p, .reveal li { font-size: 0.65em; line-height: 1.6; color: var(--text-primary); }
-.reveal li { margin-bottom: 0.3em; }
+.reveal p, .reveal li { font-size: 0.6em; line-height: 1.5; color: var(--text-primary); }
+.reveal li { margin-bottom: 0.15em; }
 .reveal code, .reveal pre code {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85em;
@@ -353,8 +353,15 @@
     <div class="svg-container" id="buck-svg-container">
         <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="max-height:220px;">
             <!-- VIN -->
-            <rect x="10" y="55" width="60" height="50" rx="4" fill="none" stroke="#f5a623" stroke-width="2"/>
-            <text x="40" y="84" text-anchor="middle" fill="#f5a623" font-family="JetBrains Mono" font-size="14">V<tspan baseline-shift="sub" font-size="10">IN</tspan></text>
+            <rect x="10" y="20" width="60" height="50" rx="4" fill="none" stroke="#f5a623" stroke-width="2"/>
+            <text x="40" y="49" text-anchor="middle" fill="#f5a623" font-family="JetBrains Mono" font-size="14">V<tspan baseline-shift="sub" font-size="10">IN</tspan></text>
+
+            <!-- Input cap (CIN) — between VIN and QHS -->
+            <line x1="90" y1="45" x2="90" y2="90" stroke="#18ffff" stroke-width="2"/>
+            <line x1="75" y1="90" x2="105" y2="90" stroke="#18ffff" stroke-width="2.5"/>
+            <line x1="78" y1="100" x2="102" y2="100" stroke="#18ffff" stroke-width="2.5"/>
+            <line x1="90" y1="100" x2="90" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <text x="108" y="98" fill="#18ffff" font-family="JetBrains Mono" font-size="10">C<tspan baseline-shift="sub" font-size="7">IN</tspan></text>
 
             <!-- High-side N-ch MOSFET symbol (Q_HS) — drain at top, source at bottom -->
             <text x="155" y="38" text-anchor="middle" fill="#9a9a9a" font-family="DM Sans" font-size="10">High-side</text>
@@ -427,8 +434,7 @@
             <text x="660" y="145" text-anchor="middle" fill="#9a9a9a" font-family="JetBrains Mono" font-size="10">PWM / PFM / COT</text>
 
             <!-- Wiring -->
-            <!-- VIN top to QHS drain -->
-            <line x1="70" y1="55" x2="70" y2="45" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- VIN to top rail -->
             <line x1="70" y1="45" x2="155" y2="45" stroke="#6a6a7a" stroke-width="1.5"/>
             <!-- QHS source to SW node / inductor -->
             <line x1="155" y1="95" x2="155" y2="105" stroke="#6a6a7a" stroke-width="1.5"/>
@@ -440,7 +446,7 @@
             <!-- QLS source to GND -->
             <line x1="155" y1="200" x2="155" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
             <!-- VIN bottom to GND rail -->
-            <line x1="70" y1="105" x2="70" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="70" y1="70" x2="70" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
             <line x1="70" y1="240" x2="530" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
             <!-- L to COUT -->
             <line x1="350" y1="80" x2="420" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
@@ -1282,10 +1288,59 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- SLIDE 24: FUTURE DIRECTIONS -->
+<!-- SLIDE 23b: AI ACCELERATOR POWER DELIVERY -->
 <!-- ============================================================ -->
 <section>
     <div class="slide-label">23</div>
+    <h2>Powering AI Accelerators</h2>
+    <p>Modern AI GPUs and custom accelerators (NVIDIA H100/B200, Google TPU, AMD Instinct) present extreme power delivery challenges that push control techniques to their limits.</p>
+
+    <div class="two-col" style="margin-top:0.4em;">
+        <div>
+            <h3>The challenge</h3>
+            <ul>
+                <li>Power budgets of 300–1000 W per chip at &lt;1 V core voltage → 500–1200 A total current</li>
+                <li>Load transients of 500+ A/μs during tensor-core burst activity</li>
+                <li>48 V rack distribution eliminates 12 V bus — direct 48 V-to-core conversion needed</li>
+                <li>Tight ±0.5% load regulation to meet JEDEC voltage margins at sub-1 V</li>
+                <li>Workload-dependent power oscillation: inference vs training have very different profiles</li>
+            </ul>
+
+            <h3 style="margin-top:0.3em;">Multi-phase at scale</h3>
+            <ul>
+                <li>16–24 phase VRMs are standard for high-end GPU power stages</li>
+                <li>Integrated power stages (DrMOS / Smart Power Stages) combine driver + FETs in 5×5 mm packages</li>
+                <li>Per-phase DCR current sensing with digital calibration for ±1% current sharing</li>
+                <li>Adaptive phase shedding tracks GPU utilisation in real time via SVID / I²C / PMBus</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Control techniques used</h3>
+            <div class="card" style="border-left: 3px solid var(--amber); margin-bottom:0.4em; padding:0.5em;">
+                <h3 style="color:var(--amber); font-size:0.75em;">Digital multi-phase COT</h3>
+                <p>Dominant in NVIDIA reference designs. Infineon XDPE192C3B, MPS MP2857 — fast transient response with digital tuning via PMBus. Emulated ripple eliminates ESR dependence.</p>
+            </div>
+            <div class="card" style="border-left: 3px solid var(--green); margin-bottom:0.4em; padding:0.5em;">
+                <h3 style="color:var(--green); font-size:0.75em;">Hybrid 48 V-to-PoL architectures</h3>
+                <p>Two-stage: 48 V → 6–8 V (LLC/resonant) → core (multi-phase buck). Single-stage: Vicor Factorised Power, Infineon hybrid DC-DC, or sigma converters eliminate the intermediate bus entirely.</p>
+            </div>
+            <div class="card" style="border-left: 3px solid var(--purple); margin-bottom:0.4em; padding:0.5em;">
+                <h3 style="color:var(--purple); font-size:0.75em;">Predictive &amp; adaptive control</h3>
+                <p>Workload-aware controllers pre-position inductor current before a load step using GPU telemetry. Intel SVID 3.0 and NVIDIA GPU-to-VRM signalling reduce undershoot by 30–50% vs reactive control.</p>
+            </div>
+
+            <div class="highlight-box" style="margin-top:0.3em;">
+                <p><strong class="accent-cyan">Industry trend:</strong> The 48 V power architecture endorsed by the Open Compute Project (OCP) is now standard in AI data centres, driving demand for high-ratio converters with &gt;95% peak efficiency at 1000+ W.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 24: FUTURE DIRECTIONS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">24</div>
     <h2>Future Directions</h2>
 
     <div class="card-grid card-grid-2" style="margin-top:0.5em;">
@@ -1316,7 +1371,7 @@
 <!-- SLIDE 25: SUMMARY -->
 <!-- ============================================================ -->
 <section>
-    <div class="slide-label">24</div>
+    <div class="slide-label">25</div>
     <h2>Summary &amp; Key Takeaways</h2>
 
     <div class="two-col" style="margin-top:0.5em;">
@@ -1361,7 +1416,7 @@
 <!-- SLIDE 26: REFERENCES -->
 <!-- ============================================================ -->
 <section>
-    <div class="slide-label">25</div>
+    <div class="slide-label">26</div>
     <h2>References &amp; Resources</h2>
 
     <div class="two-col" style="margin-top:0.5em;">
@@ -1418,8 +1473,8 @@ Reveal.initialize({
     slideNumber: true,
     center: false,
     width: 1280,
-    height: 720,
-    margin: 0.04,
+    height: 800,
+    margin: 0.02,
     transition: 'fade',
     transitionSpeed: 'default',
     backgroundTransition: 'fade',
