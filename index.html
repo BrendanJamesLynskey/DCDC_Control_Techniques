@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC-DC Converter Control Techniques</title>
+
+<!-- Reveal.js 4.6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-card-alt: #1a1a28;
+    --amber: #f5a623;
+    --amber-dim: #c4841c;
+    --green: #00e676;
+    --green-dim: #00b85c;
+    --purple: #bb86fc;
+    --purple-dim: #9a5ddb;
+    --cyan: #18ffff;
+    --red: #ff5252;
+    --text-primary: #e8e6e3;
+    --text-muted: #9a9a9a;
+    --text-dim: #6a6a7a;
+    --border: #2a2a3a;
+}
+
+.reveal {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+}
+.reveal .slides { text-align: left; }
+.reveal .slides section { background: var(--bg-primary); }
+
+.reveal h1, .reveal h2, .reveal h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -0.02em;
+}
+.reveal h1 { font-size: 2.6em; color: var(--amber); }
+.reveal h2 { font-size: 1.8em; color: var(--amber); margin-bottom: 0.5em; }
+.reveal h3 { font-size: 1.1em; color: var(--green); margin-bottom: 0.3em; }
+
+.reveal p, .reveal li { font-size: 0.65em; line-height: 1.6; color: var(--text-primary); }
+.reveal li { margin-bottom: 0.3em; }
+.reveal code, .reveal pre code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+}
+.reveal .slide-number { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 0.7em; }
+
+/* Tag / pill style */
+.tag {
+    display: inline-block;
+    padding: 0.2em 0.7em;
+    border-radius: 999px;
+    font-size: 0.55em;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+}
+.tag-amber { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+.tag-green { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+.tag-purple { background: rgba(187,134,252,0.15); color: var(--purple); border: 1px solid rgba(187,134,252,0.3); }
+.tag-cyan { background: rgba(24,255,255,0.15); color: var(--cyan); border: 1px solid rgba(24,255,255,0.3); }
+.tag-red { background: rgba(255,82,82,0.15); color: var(--red); border: 1px solid rgba(255,82,82,0.3); }
+
+/* Card grid */
+.card-grid { display: grid; gap: 0.8em; margin-top: 0.6em; }
+.card-grid-2 { grid-template-columns: 1fr 1fr; }
+.card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8em;
+    transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--amber); }
+.card h3 { margin-top: 0; font-size: 0.85em; }
+.card p, .card li { font-size: 0.55em; }
+
+/* Table */
+.reveal table { font-size: 0.55em; width: 100%; border-collapse: collapse; margin-top: 0.5em; }
+.reveal table th {
+    background: var(--bg-card);
+    color: var(--amber);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    padding: 0.5em 0.7em;
+    border-bottom: 2px solid var(--amber);
+    text-align: left;
+}
+.reveal table td {
+    padding: 0.5em 0.7em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+.reveal table tr:hover td { background: rgba(245,166,35,0.05); }
+
+/* Subtitle / dim text */
+.subtitle { color: var(--text-muted); font-size: 0.7em; margin-top: -0.3em; }
+.dim { color: var(--text-dim); }
+.accent-amber { color: var(--amber); }
+.accent-green { color: var(--green); }
+.accent-purple { color: var(--purple); }
+.accent-cyan { color: var(--cyan); }
+.accent-red { color: var(--red); }
+
+/* Flow diagrams */
+.flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    margin: 0.8em 0;
+    flex-wrap: wrap;
+}
+.flow-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4em 0.8em;
+    font-size: 0.55em;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    min-width: 80px;
+}
+.flow-arrow { color: var(--amber); font-size: 1.2em; }
+
+/* Interactive SVG containers */
+.svg-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    text-align: center;
+}
+.svg-container svg { max-width: 100%; height: auto; }
+
+/* Slide-specific label */
+.slide-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5em;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.2em;
+}
+
+/* Two-column layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; align-items: start; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8em; align-items: start; }
+
+/* Highlight box */
+.highlight-box {
+    background: rgba(245,166,35,0.08);
+    border-left: 3px solid var(--amber);
+    padding: 0.5em 0.8em;
+    border-radius: 0 6px 6px 0;
+    margin: 0.5em 0;
+}
+.highlight-box p { font-size: 0.6em; }
+
+/* Interactive controls */
+.controls-row {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    margin: 0.5em 0;
+    flex-wrap: wrap;
+}
+.ctrl-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.3em 0.8em;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5em;
+    transition: all 0.2s;
+}
+.ctrl-btn:hover { border-color: var(--amber); color: var(--amber); }
+.ctrl-btn.active { background: rgba(245,166,35,0.15); border-color: var(--amber); color: var(--amber); }
+
+.ctrl-slider {
+    -webkit-appearance: none;
+    width: 180px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+}
+.ctrl-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+}
+.ctrl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5em;
+    color: var(--text-muted);
+}
+
+/* Title slide */
+.title-slide h1 { font-size: 2.4em; line-height: 1.1; margin-bottom: 0.1em; }
+.title-slide .title-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8em;
+    color: var(--text-muted);
+    font-weight: 300;
+}
+.title-slide .title-tags { margin-top: 1em; }
+
+/* Progress bar at bottom */
+.reveal .progress { color: var(--amber); height: 3px; }
+</style>
+</head>
+<body>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- SLIDE 01: TITLE -->
+<!-- ============================================================ -->
+<section class="title-slide">
+    <div class="slide-label">Technical Presentation</div>
+    <h1>DC-DC Converter<br>Control Techniques</h1>
+    <p class="title-sub">PWM · PFM · Constant On-Time &amp; Beyond</p>
+    <div class="title-tags">
+        <span class="tag tag-amber">Power Electronics</span>
+        <span class="tag tag-green">Control Theory</span>
+        <span class="tag tag-purple">Embedded Systems</span>
+    </div>
+    <div class="flow-row" style="margin-top:1.5em;">
+        <div class="flow-box" style="border-color:var(--amber);">V<sub>IN</sub></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:var(--green);">Control</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:var(--purple);">Switch</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:var(--cyan);">Filter</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:var(--amber);">V<sub>OUT</sub></div>
+    </div>
+    <p style="font-size:0.5em; color:var(--text-dim); margin-top:1.5em;">Brendan Lynskey · 2025</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 02: AGENDA -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">01</div>
+    <h2>Topics</h2>
+    <div class="card-grid card-grid-2">
+        <div class="card">
+            <h3>Foundations</h3>
+            <ul>
+                <li>Why control matters in DC-DC converters</li>
+                <li>The basic buck converter topology</li>
+                <li>Voltage-mode vs current-mode control</li>
+                <li>Type II / Type III compensation</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>PWM Control</h3>
+            <ul>
+                <li>Fixed-frequency pulse width modulation</li>
+                <li>Voltage-mode PWM (VM-PWM)</li>
+                <li>Peak / valley / average current-mode PWM</li>
+                <li>Sub-harmonic oscillation and slope compensation</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>PFM &amp; Hysteretic</h3>
+            <ul>
+                <li>Pulse frequency modulation overview</li>
+                <li>Burst mode and pulse-skipping</li>
+                <li>Hysteretic (bang-bang) control</li>
+                <li>Light-load efficiency advantages</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>COT &amp; Future Directions</h3>
+            <ul>
+                <li>Constant on-time (COT) principles</li>
+                <li>Ripple-based and emulated ripple COT</li>
+                <li>D-CAP / D-CAP2 / D-CAP3</li>
+                <li>Digital control, adaptive, AI/ML-assisted</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 03: WHY CONTROL MATTERS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">02</div>
+    <h2>Why Control Matters</h2>
+    <p>A DC-DC converter is a switched-mode power supply that transfers energy from input to output through periodic switching. Without a feedback control loop, the output voltage drifts with line, load, and temperature changes.</p>
+
+    <div class="two-col" style="margin-top:0.6em;">
+        <div>
+            <h3>The control problem</h3>
+            <ul>
+                <li>Maintain regulated V<sub>OUT</sub> across varying V<sub>IN</sub> (line regulation)</li>
+                <li>Maintain V<sub>OUT</sub> across varying I<sub>LOAD</sub> (load regulation)</li>
+                <li>Fast transient response — sudden load steps</li>
+                <li>Low output ripple and noise</li>
+                <li>Stability — the loop must not oscillate</li>
+                <li>Efficiency across the entire load range</li>
+            </ul>
+        </div>
+        <div>
+            <div class="highlight-box">
+                <h3 style="color:var(--amber);">Key insight</h3>
+                <p>The choice of control technique determines the fundamental tradeoff between transient response speed, output ripple, efficiency at light load, EMI spectrum, and design complexity. There is no single best technique — only the best fit for your application constraints.</p>
+            </div>
+            <div style="margin-top:0.5em;">
+                <span class="tag tag-amber">Line regulation</span>
+                <span class="tag tag-green">Load regulation</span>
+                <span class="tag tag-purple">Transient response</span>
+                <span class="tag tag-cyan">Efficiency</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 04: BUCK CONVERTER BASICS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">03</div>
+    <h2>The Buck Converter</h2>
+    <p>The synchronous buck is the workhorse topology for step-down conversion. All three major control techniques — PWM, PFM, and COT — are applied to this fundamental circuit.</p>
+
+    <div class="svg-container" id="buck-svg-container">
+        <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="max-height:220px;">
+            <!-- VIN -->
+            <rect x="10" y="80" width="60" height="50" rx="4" fill="none" stroke="#f5a623" stroke-width="2"/>
+            <text x="40" y="110" text-anchor="middle" fill="#f5a623" font-family="JetBrains Mono" font-size="14">V<tspan baseline-shift="sub" font-size="10">IN</tspan></text>
+
+            <!-- High-side FET -->
+            <rect x="120" y="60" width="70" height="40" rx="4" fill="none" stroke="#00e676" stroke-width="2"/>
+            <text x="155" y="85" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono" font-size="12">Q<tspan baseline-shift="sub" font-size="9">HS</tspan></text>
+            <text x="155" y="48" text-anchor="middle" fill="#9a9a9a" font-family="DM Sans" font-size="10">High-side</text>
+
+            <!-- Low-side FET -->
+            <rect x="120" y="160" width="70" height="40" rx="4" fill="none" stroke="#00e676" stroke-width="2"/>
+            <text x="155" y="185" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono" font-size="12">Q<tspan baseline-shift="sub" font-size="9">LS</tspan></text>
+            <text x="155" y="215" text-anchor="middle" fill="#9a9a9a" font-family="DM Sans" font-size="10">Low-side</text>
+
+            <!-- SW node label -->
+            <text x="225" y="95" text-anchor="middle" fill="#18ffff" font-family="JetBrains Mono" font-size="11">SW</text>
+
+            <!-- Inductor -->
+            <rect x="260" y="65" width="100" height="30" rx="15" fill="none" stroke="#bb86fc" stroke-width="2"/>
+            <text x="310" y="85" text-anchor="middle" fill="#bb86fc" font-family="JetBrains Mono" font-size="13">L</text>
+            <text x="310" y="52" text-anchor="middle" fill="#9a9a9a" font-family="DM Sans" font-size="10">Inductor</text>
+
+            <!-- Output cap -->
+            <line x1="420" y1="70" x2="420" y2="82" stroke="#18ffff" stroke-width="2"/>
+            <line x1="405" y1="82" x2="435" y2="82" stroke="#18ffff" stroke-width="2"/>
+            <line x1="408" y1="92" x2="432" y2="92" stroke="#18ffff" stroke-width="2"/>
+            <line x1="420" y1="92" x2="420" y2="110" stroke="#18ffff" stroke-width="2"/>
+            <text x="450" y="90" fill="#18ffff" font-family="JetBrains Mono" font-size="12">C<tspan baseline-shift="sub" font-size="9">OUT</tspan></text>
+
+            <!-- VOUT -->
+            <rect x="500" y="55" width="60" height="50" rx="4" fill="none" stroke="#f5a623" stroke-width="2"/>
+            <text x="530" y="82" text-anchor="middle" fill="#f5a623" font-family="JetBrains Mono" font-size="13">V<tspan baseline-shift="sub" font-size="9">OUT</tspan></text>
+
+            <!-- Load -->
+            <rect x="500" y="140" width="60" height="45" rx="4" fill="none" stroke="#9a9a9a" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="530" y="167" text-anchor="middle" fill="#9a9a9a" font-family="JetBrains Mono" font-size="11">LOAD</text>
+
+            <!-- Controller block -->
+            <rect x="600" y="100" width="120" height="60" rx="6" fill="rgba(245,166,35,0.1)" stroke="#f5a623" stroke-width="2"/>
+            <text x="660" y="125" text-anchor="middle" fill="#f5a623" font-family="Playfair Display" font-size="13" font-weight="700">Controller</text>
+            <text x="660" y="145" text-anchor="middle" fill="#9a9a9a" font-family="JetBrains Mono" font-size="10">PWM / PFM / COT</text>
+
+            <!-- Wiring -->
+            <line x1="70" y1="80" x2="70" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- VIN to QHS -->
+            <line x1="70" y1="80" x2="120" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- QHS to SW node -->
+            <line x1="190" y1="80" x2="260" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- SW node down to QLS -->
+            <line x1="210" y1="80" x2="210" y2="100" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="155" y1="100" x2="210" y2="100" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="155" y1="100" x2="155" y2="160" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- QLS to GND -->
+            <line x1="155" y1="200" x2="155" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="70" y1="130" x2="70" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="70" y1="240" x2="530" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- L to COUT -->
+            <line x1="360" y1="80" x2="420" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- COUT to VOUT -->
+            <line x1="420" y1="70" x2="420" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="420" y1="80" x2="500" y2="80" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- VOUT to Load -->
+            <line x1="530" y1="105" x2="530" y2="140" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- Load to GND -->
+            <line x1="530" y1="185" x2="530" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+            <!-- COUT to GND -->
+            <line x1="420" y1="110" x2="420" y2="240" stroke="#6a6a7a" stroke-width="1.5"/>
+
+            <!-- Feedback line -->
+            <line x1="560" y1="80" x2="580" y2="80" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="580" y1="80" x2="580" y2="130" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="580" y1="130" x2="600" y2="130" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="583" y="75" fill="#ff5252" font-family="JetBrains Mono" font-size="9">FB</text>
+
+            <!-- GND symbol -->
+            <line x1="290" y1="240" x2="310" y2="240" stroke="#6a6a7a" stroke-width="2"/>
+            <line x1="295" y1="246" x2="305" y2="246" stroke="#6a6a7a" stroke-width="1.5"/>
+            <line x1="298" y1="252" x2="302" y2="252" stroke="#6a6a7a" stroke-width="1"/>
+            <text x="300" y="268" text-anchor="middle" fill="#6a6a7a" font-family="JetBrains Mono" font-size="10">GND</text>
+        </svg>
+    </div>
+    <p style="font-size:0.5em; color:var(--text-dim); text-align:center;">Synchronous buck converter with feedback control loop — the platform for all techniques covered in this presentation</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 05: VOLTAGE-MODE vs CURRENT-MODE -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">04</div>
+    <h2>Voltage-Mode vs Current-Mode</h2>
+    <p>Before diving into specific techniques, the first architectural decision is whether the control loop senses only the output voltage (voltage-mode) or also senses the inductor current (current-mode).</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div class="card" style="border-color:var(--amber);">
+            <h3 style="color:var(--amber);">Voltage-Mode Control (VMC)</h3>
+            <ul>
+                <li>Error amplifier compares V<sub>OUT</sub> to V<sub>REF</sub></li>
+                <li>Compensated error signal compared to a fixed-frequency ramp (sawtooth) to generate PWM duty cycle</li>
+                <li>Single feedback loop — simpler to understand</li>
+                <li>Requires Type III compensator for adequate phase margin with LC filter</li>
+                <li>Slower line transient response — V<sub>IN</sub> disturbances must propagate through L-C before being corrected</li>
+                <li>Feed-forward of V<sub>IN</sub> improves line regulation</li>
+            </ul>
+        </div>
+        <div class="card" style="border-color:var(--green);">
+            <h3 style="color:var(--green);">Current-Mode Control (CMC)</h3>
+            <ul>
+                <li>Inner loop senses inductor current; outer loop regulates V<sub>OUT</sub></li>
+                <li>Inductor becomes a voltage-controlled current source — removes one pole from the outer loop</li>
+                <li>Type II compensator is sufficient — simpler compensation</li>
+                <li>Inherent cycle-by-cycle current limiting</li>
+                <li>Faster line transient rejection</li>
+                <li>Susceptible to sub-harmonic oscillation at D > 50% — requires slope compensation</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:0.6em;">
+        <p><strong class="accent-amber">Industry trend:</strong> Current-mode control dominates modern integrated DC-DC converters due to simpler compensation, built-in current protection, and superior line transient response. Most PWM controllers from TI, Analog Devices, and MPS use peak current-mode or a COT variant.</p>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 06: PWM OVERVIEW -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">05</div>
+    <h2>PWM: Pulse Width Modulation</h2>
+    <p>PWM is the most established control technique. The switching frequency is fixed; the duty cycle (on-time / period) is modulated to regulate the output.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Operating principle</h3>
+            <p>For a buck converter: <span class="accent-amber">V<sub>OUT</sub> = D × V<sub>IN</sub></span> where D is the duty cycle. The controller adjusts D by comparing the error amplifier output to a periodic ramp signal. When the error signal is high, D increases, delivering more energy to the output.</p>
+
+            <h3 style="margin-top:0.5em;">Advantages</h3>
+            <ul>
+                <li>Predictable, fixed switching frequency — easy EMI filter design</li>
+                <li>Well-understood, mature stability analysis (Bode plots)</li>
+                <li>Excellent output ripple performance</li>
+                <li>Wide duty cycle range</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Disadvantages</h3>
+            <ul>
+                <li>Poor light-load efficiency — switching losses dominate when I<sub>LOAD</sub> is small</li>
+                <li>Fixed frequency means constant gate-drive and switching losses regardless of load</li>
+                <li>Transient response limited by bandwidth of the error amplifier loop</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">PWM sub-types</h3>
+            <div style="margin-top:0.3em;">
+                <span class="tag tag-amber">Voltage-mode PWM</span>
+                <span class="tag tag-green">Peak CMC</span>
+                <span class="tag tag-purple">Valley CMC</span>
+                <span class="tag tag-cyan">Avg CMC</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 07: INTERACTIVE PWM WAVEFORM -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">06</div>
+    <h2>Interactive: PWM Waveforms</h2>
+    <p>Adjust the duty cycle and observe how the gate drive, inductor current, and output ripple change.</p>
+
+    <div class="controls-row">
+        <span class="ctrl-label">Duty Cycle:</span>
+        <input type="range" class="ctrl-slider" id="pwm-duty" min="10" max="90" value="50">
+        <span class="ctrl-label" id="pwm-duty-val" style="color:var(--amber); min-width:3em;">50%</span>
+        <span class="ctrl-label" style="margin-left:1em;">Mode:</span>
+        <button class="ctrl-btn active" onclick="setPwmMode('vm')" id="btn-vm">Voltage-mode</button>
+        <button class="ctrl-btn" onclick="setPwmMode('cm')" id="btn-cm">Current-mode</button>
+    </div>
+
+    <div class="svg-container">
+        <svg id="pwm-wave-svg" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" style="max-height:240px;">
+            <!-- Labels -->
+            <text x="15" y="35" fill="#f5a623" font-family="JetBrains Mono" font-size="11">Gate (V<tspan baseline-shift="sub" font-size="8">GS</tspan>)</text>
+            <text x="15" y="130" fill="#bb86fc" font-family="JetBrains Mono" font-size="11">I<tspan baseline-shift="sub" font-size="8">L</tspan></text>
+            <text x="15" y="225" fill="#00e676" font-family="JetBrains Mono" font-size="11">V<tspan baseline-shift="sub" font-size="8">OUT</tspan></text>
+            <text x="15" y="285" fill="#ff5252" font-family="JetBrains Mono" font-size="11" id="pwm-ramp-label">Ramp / V<tspan baseline-shift="sub" font-size="8">COMP</tspan></text>
+
+            <!-- Axis lines -->
+            <line x1="90" y1="10" x2="90" y2="295" stroke="#2a2a3a" stroke-width="1"/>
+            <line x1="90" y1="65" x2="780" y2="65" stroke="#2a2a3a" stroke-width="1"/>
+            <line x1="90" y1="160" x2="780" y2="160" stroke="#2a2a3a" stroke-width="1"/>
+            <line x1="90" y1="250" x2="780" y2="250" stroke="#2a2a3a" stroke-width="1"/>
+
+            <!-- Dynamic waveforms drawn by JS -->
+            <path id="pwm-gate-path" d="" fill="none" stroke="#f5a623" stroke-width="2"/>
+            <path id="pwm-il-path" d="" fill="none" stroke="#bb86fc" stroke-width="2"/>
+            <path id="pwm-vout-path" d="" fill="none" stroke="#00e676" stroke-width="2"/>
+            <path id="pwm-ramp-path" d="" fill="none" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line id="pwm-comp-line" x1="90" y1="280" x2="780" y2="280" stroke="#18ffff" stroke-width="1.5" stroke-dasharray="6,3"/>
+        </svg>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 08: PEAK CURRENT-MODE PWM -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">07</div>
+    <h2>Peak Current-Mode PWM</h2>
+    <p>The most popular CMC variant. The inductor current is compared to the error amplifier output (V<sub>COMP</sub>). When the sensed current reaches V<sub>COMP</sub>, the high-side FET turns off.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>How it works</h3>
+            <ol>
+                <li style="font-size:0.55em;">Clock rising edge turns on Q<sub>HS</sub></li>
+                <li style="font-size:0.55em;">Inductor current ramps up (sensed via R<sub>SENSE</sub> or FET R<sub>DS(on)</sub>)</li>
+                <li style="font-size:0.55em;">When I<sub>L</sub> × R<sub>SENSE</sub> = V<sub>COMP</sub>, Q<sub>HS</sub> turns off</li>
+                <li style="font-size:0.55em;">Q<sub>LS</sub> conducts until next clock edge</li>
+            </ol>
+
+            <h3 style="margin-top:0.5em;">Sub-harmonic oscillation</h3>
+            <p>At D > 50%, a small perturbation in the inductor current grows on alternate cycles, causing the duty cycle to alternate between two values. This is fixed by adding an artificial ramp (slope compensation) to the sensed current signal.</p>
+        </div>
+        <div>
+            <h3>Slope compensation rule</h3>
+            <div class="highlight-box">
+                <p>The compensating ramp slope must be at least 50% of the inductor current down-slope: <span class="accent-amber">m<sub>a</sub> ≥ ½ × m<sub>2</sub></span> where m<sub>2</sub> = (V<sub>OUT</sub>) / L. Insufficient compensation leads to jitter; excessive compensation makes the loop behave like voltage-mode.</p>
+            </div>
+
+            <h3 style="margin-top:0.5em;">Sensing methods</h3>
+            <table>
+                <tr><th>Method</th><th>Pros</th><th>Cons</th></tr>
+                <tr><td>Sense resistor</td><td>Accurate, linear</td><td>Power loss (I²R)</td></tr>
+                <tr><td>FET R<sub>DS(on)</sub></td><td>Lossless, no extra parts</td><td>Temp-dependent, noisy</td></tr>
+                <tr><td>DCR sensing</td><td>Lossless, uses existing L</td><td>Requires matched RC network</td></tr>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 09: VALLEY AND AVERAGE CMC -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">08</div>
+    <h2>Valley &amp; Average Current-Mode</h2>
+
+    <div class="two-col">
+        <div class="card" style="border-color:var(--purple);">
+            <h3 style="color:var(--purple);">Valley Current-Mode</h3>
+            <p>The inverse of peak CMC — the off-time is fixed by a clock, and the low-side FET conducts until the inductor current falls to the V<sub>COMP</sub> threshold, at which point Q<sub>HS</sub> turns on.</p>
+            <ul>
+                <li>Sub-harmonic instability occurs at D < 50% (opposite of peak CMC)</li>
+                <li>Better suited for boost and high-duty-cycle buck converters</li>
+                <li>Faster response to load steps that increase current demand</li>
+                <li>Used in some TI and Infineon controllers</li>
+            </ul>
+        </div>
+        <div class="card" style="border-color:var(--cyan);">
+            <h3 style="color:var(--cyan);">Average Current-Mode</h3>
+            <p>Instead of comparing the peak or valley of the current, a second integrating amplifier (current error amplifier) regulates the average inductor current to match V<sub>COMP</sub>.</p>
+            <ul>
+                <li>No sub-harmonic oscillation — no slope compensation needed</li>
+                <li>More accurate current regulation (important for LED drivers, battery chargers)</li>
+                <li>Higher loop bandwidth possible</li>
+                <li>More complex — requires two compensated loops</li>
+                <li>Used in UC3854 (PFC), LT3741 (LED driver)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:0.5em;">
+        <p><strong class="accent-green">Design guideline:</strong> Peak CMC is the default choice for most buck converters. Use valley CMC for boost or high-duty-cycle applications. Use average CMC when accurate current regulation is the primary requirement (LED constant-current drivers, battery chargers, PFC).</p>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: PFM OVERVIEW -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">09</div>
+    <h2>PFM: Pulse Frequency Modulation</h2>
+    <p>PFM addresses the fundamental weakness of fixed-frequency PWM: poor efficiency at light loads. Instead of switching at a constant frequency, PFM delivers energy pulses only when needed.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Operating principle</h3>
+            <p>The converter monitors V<sub>OUT</sub>. When it falls below a threshold, one or more switching pulses are delivered to recharge the output capacitor. Between pulses, the converter is essentially idle — no switching losses.</p>
+
+            <h3 style="margin-top:0.5em;">Key advantage</h3>
+            <p>At very light loads, switching losses dominate. PFM reduces the effective switching frequency in proportion to load current, keeping efficiency above 80-90% even at microamp loads. This is critical for battery-powered devices in standby.</p>
+        </div>
+        <div>
+            <h3>PFM variants</h3>
+            <div class="card" style="margin-bottom:0.5em;">
+                <h3 style="color:var(--amber);">Pulse-skipping</h3>
+                <p>PWM oscillator runs continuously but gate drive pulses are skipped when the inductor current would reverse (DCM boundary). Simple to implement — many converters do this automatically.</p>
+            </div>
+            <div class="card">
+                <h3 style="color:var(--green);">Burst mode</h3>
+                <p>The controller delivers a burst of several PWM pulses, then enters a sleep state until V<sub>OUT</sub> droops. Reduces quiescent current to the microamp range. Used in TPS62xxx, LTC3xxx families.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: INTERACTIVE PFM EFFICIENCY -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">10</div>
+    <h2>Interactive: PWM vs PFM Efficiency</h2>
+    <p>Drag the load current slider to see how efficiency changes. PFM maintains high efficiency at light loads where PWM efficiency collapses.</p>
+
+    <div class="controls-row">
+        <span class="ctrl-label">Load Current:</span>
+        <input type="range" class="ctrl-slider" id="eff-load" min="0" max="100" value="50" style="width:300px;">
+        <span class="ctrl-label" id="eff-load-val" style="color:var(--amber); min-width:4em;">500 mA</span>
+    </div>
+
+    <div class="svg-container">
+        <svg id="eff-svg" viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" style="max-height:260px;">
+            <!-- Axes -->
+            <line x1="80" y1="20" x2="80" y2="280" stroke="#2a2a3a" stroke-width="1"/>
+            <line x1="80" y1="280" x2="760" y2="280" stroke="#2a2a3a" stroke-width="1"/>
+            <text x="40" y="155" fill="#9a9a9a" font-family="JetBrains Mono" font-size="11" transform="rotate(-90 40 155)">Efficiency (%)</text>
+            <text x="420" y="310" fill="#9a9a9a" font-family="JetBrains Mono" font-size="11" text-anchor="middle">Load Current (mA)</text>
+
+            <!-- Y-axis labels -->
+            <text x="72" y="280" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">0</text>
+            <text x="72" y="228" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">20</text>
+            <text x="72" y="176" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">40</text>
+            <text x="72" y="124" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">60</text>
+            <text x="72" y="72" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">80</text>
+            <text x="72" y="30" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="end">100</text>
+
+            <!-- X-axis labels -->
+            <text x="80" y="296" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="middle">0.1</text>
+            <text x="250" y="296" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="middle">1</text>
+            <text x="420" y="296" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="middle">10</text>
+            <text x="590" y="296" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="middle">100</text>
+            <text x="760" y="296" fill="#6a6a7a" font-family="JetBrains Mono" font-size="9" text-anchor="middle">1000</text>
+
+            <!-- Grid lines -->
+            <line x1="80" y1="228" x2="760" y2="228" stroke="#1a1a28" stroke-width="0.5"/>
+            <line x1="80" y1="176" x2="760" y2="176" stroke="#1a1a28" stroke-width="0.5"/>
+            <line x1="80" y1="124" x2="760" y2="124" stroke="#1a1a28" stroke-width="0.5"/>
+            <line x1="80" y1="72" x2="760" y2="72" stroke="#1a1a28" stroke-width="0.5"/>
+
+            <!-- PWM curve -->
+            <path id="eff-pwm-path" d="" fill="none" stroke="#f5a623" stroke-width="2.5"/>
+            <!-- PFM curve -->
+            <path id="eff-pfm-path" d="" fill="none" stroke="#00e676" stroke-width="2.5"/>
+            <!-- PWM+PFM auto-switching curve -->
+            <path id="eff-auto-path" d="" fill="none" stroke="#bb86fc" stroke-width="2" stroke-dasharray="6,3"/>
+
+            <!-- Current marker -->
+            <line id="eff-marker" x1="420" y1="20" x2="420" y2="280" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle id="eff-dot-pwm" cx="420" cy="100" r="5" fill="#f5a623"/>
+            <circle id="eff-dot-pfm" cx="420" cy="80" r="5" fill="#00e676"/>
+
+            <!-- Legend -->
+            <line x1="560" y1="20" x2="590" y2="20" stroke="#f5a623" stroke-width="2.5"/>
+            <text x="595" y="24" fill="#f5a623" font-family="JetBrains Mono" font-size="10">PWM</text>
+            <line x1="640" y1="20" x2="670" y2="20" stroke="#00e676" stroke-width="2.5"/>
+            <text x="675" y="24" fill="#00e676" font-family="JetBrains Mono" font-size="10">PFM</text>
+            <line x1="560" y1="38" x2="590" y2="38" stroke="#bb86fc" stroke-width="2" stroke-dasharray="6,3"/>
+            <text x="595" y="42" fill="#bb86fc" font-family="JetBrains Mono" font-size="10">Auto PWM/PFM</text>
+
+            <!-- Efficiency readouts -->
+            <text id="eff-pwm-text" x="100" y="35" fill="#f5a623" font-family="JetBrains Mono" font-size="12"></text>
+            <text id="eff-pfm-text" x="100" y="50" fill="#00e676" font-family="JetBrains Mono" font-size="12"></text>
+        </svg>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: HYSTERETIC CONTROL -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">11</div>
+    <h2>Hysteretic (Bang-Bang) Control</h2>
+    <p>The simplest form of voltage regulation — no error amplifier, no compensator, no oscillator. The output voltage is compared against upper and lower thresholds, and the switch is toggled accordingly.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Operating principle</h3>
+            <ul>
+                <li>When V<sub>OUT</sub> falls below V<sub>REF</sub> − ΔV (lower threshold), turn on Q<sub>HS</sub></li>
+                <li>When V<sub>OUT</sub> rises above V<sub>REF</sub> + ΔV (upper threshold), turn off Q<sub>HS</sub></li>
+                <li>The hysteresis band ΔV determines the output ripple</li>
+                <li>Switching frequency varies with V<sub>IN</sub>, V<sub>OUT</sub>, L, and load</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Advantages</h3>
+            <ul>
+                <li>Fastest possible transient response — no loop delay</li>
+                <li>No compensation design needed — inherently stable</li>
+                <li>Lowest quiescent current architectures possible</li>
+                <li>Self-adjusting frequency for efficiency</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Disadvantages</h3>
+            <ul>
+                <li>Variable switching frequency — hard to filter EMI</li>
+                <li>Output ripple depends on ESR and hysteresis window</li>
+                <li>Sensitive to PCB layout parasitics and feedback delays</li>
+                <li>Difficult to synchronise or interleave multiple phases</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Modern usage</h3>
+            <p>Pure hysteretic control is rare in discrete designs but lives on inside integrated converters (TPS6208x, MAX17xxx) and has evolved into the more refined COT architecture. It remains popular for ultra-low-power applications where simplicity and quiescent current are paramount.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 13: COT OVERVIEW -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">12</div>
+    <h2>COT: Constant On-Time</h2>
+    <p>COT is a ripple-based control technique that combines the fast transient response of hysteretic control with more predictable frequency behaviour. It has become the dominant architecture for point-of-load (PoL) converters.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Operating principle</h3>
+            <ol>
+                <li style="font-size:0.55em;">When V<sub>OUT</sub> drops below V<sub>REF</sub>, a fixed on-time pulse is initiated</li>
+                <li style="font-size:0.55em;">Q<sub>HS</sub> conducts for exactly T<sub>ON</sub> (set by V<sub>IN</sub>, V<sub>OUT</sub>, and f<sub>SW</sub> target)</li>
+                <li style="font-size:0.55em;">After T<sub>ON</sub> expires, Q<sub>LS</sub> conducts until V<sub>OUT</sub> droops below V<sub>REF</sub> again</li>
+                <li style="font-size:0.55em;">T<sub>ON</sub> is typically calculated as: T<sub>ON</sub> = V<sub>OUT</sub> / (V<sub>IN</sub> × f<sub>SW</sub>)</li>
+            </ol>
+
+            <h3 style="margin-top:0.5em;">Why COT is fast</h3>
+            <p>There is no error amplifier in the main loop — only a comparator. Comparator response is typically 30-100 ns vs microseconds for an error amp loop. This gives COT near-instantaneous load transient response.</p>
+        </div>
+        <div>
+            <h3>The ripple requirement</h3>
+            <p>COT needs output voltage ripple in phase with inductor current for stable operation. If the ESR ripple is too small (as with ceramic output capacitors), the converter can experience jitter or multi-pulsing.</p>
+
+            <div class="highlight-box">
+                <p><strong class="accent-amber">This is the central challenge of COT design:</strong> modern applications use low-ESR MLCC capacitors that produce minimal resistive ripple. Solutions include emulated ripple injection circuits and advanced architectures like D-CAP.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 14: COT VARIANTS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">13</div>
+    <h2>COT Variants: Ripple Solutions</h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:0.5em;">
+        <div class="card" style="border-color:var(--amber);">
+            <h3 style="color:var(--amber);">Classic COT (ESR-dependent)</h3>
+            <p>Relies on the ESR of the output capacitor to generate in-phase ripple at the feedback node. Works well with electrolytic or OS-CON capacitors (ESR > 10 mΩ). Simple and fast, but not usable with all-ceramic output stages.</p>
+            <p class="dim" style="font-size:0.5em;">Example: LM5145, early TPS54xxx</p>
+        </div>
+        <div class="card" style="border-color:var(--green);">
+            <h3 style="color:var(--green);">Emulated Ripple COT</h3>
+            <p>An internal ramp generator synthesises a signal that mimics the inductor current ripple. This artificial ripple is injected into the feedback comparator, allowing COT to work with any output capacitor type including all-MLCC.</p>
+            <p class="dim" style="font-size:0.5em;">Example: TPS543xxx, AOZ2xxx</p>
+        </div>
+        <div class="card" style="border-color:var(--purple);">
+            <h3 style="color:var(--purple);">D-CAP (TI proprietary)</h3>
+            <p>Uses an internal time-constant matching network to generate emulated ripple. D-CAP requires minimal external components — only the feedback resistor divider. Very fast load transient. Sensitive to board layout.</p>
+            <p class="dim" style="font-size:0.5em;">Example: TPS51xxx, TPS53xxx</p>
+        </div>
+        <div class="card" style="border-color:var(--cyan);">
+            <h3 style="color:var(--cyan);">D-CAP2 / D-CAP3</h3>
+            <p><strong>D-CAP2</strong> adds a second internal network for improved accuracy with all-ceramic outputs and better jitter performance. <strong>D-CAP3</strong> adds a full internal voltage reference and compensation, eliminating external feedback resistors entirely. Targets the simplest possible PoL design.</p>
+            <p class="dim" style="font-size:0.5em;">Example: TPS548xx (D-CAP2), TPS543B20 (D-CAP3)</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 15: INTERACTIVE COT TIMING -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">14</div>
+    <h2>Interactive: COT Timing</h2>
+    <p>Adjust V<sub>IN</sub> and observe how COT maintains a near-constant on-time while the off-time (and thus frequency) adapts. The duty cycle self-adjusts to regulate V<sub>OUT</sub>.</p>
+
+    <div class="controls-row">
+        <span class="ctrl-label">V<sub>IN</sub>:</span>
+        <input type="range" class="ctrl-slider" id="cot-vin" min="5" max="20" value="12" style="width:200px;">
+        <span class="ctrl-label" id="cot-vin-val" style="color:var(--amber); min-width:3em;">12 V</span>
+        <span class="ctrl-label" style="margin-left:1em;">V<sub>OUT</sub> = 3.3 V</span>
+        <span class="ctrl-label" style="margin-left:1em;">T<sub>ON</sub> target:</span>
+        <span class="ctrl-label" id="cot-ton-val" style="color:var(--green);">275 ns</span>
+        <span class="ctrl-label" style="margin-left:1em;">f<sub>SW</sub>:</span>
+        <span class="ctrl-label" id="cot-fsw-val" style="color:var(--purple);">1.00 MHz</span>
+    </div>
+
+    <div class="svg-container">
+        <svg id="cot-wave-svg" viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg" style="max-height:210px;">
+            <!-- Labels -->
+            <text x="15" y="35" fill="#f5a623" font-family="JetBrains Mono" font-size="11">SW Node</text>
+            <text x="15" y="120" fill="#bb86fc" font-family="JetBrains Mono" font-size="11">I<tspan baseline-shift="sub" font-size="8">L</tspan></text>
+            <text x="15" y="210" fill="#00e676" font-family="JetBrains Mono" font-size="11">V<tspan baseline-shift="sub" font-size="8">OUT</tspan></text>
+
+            <!-- Axes -->
+            <line x1="80" y1="10" x2="80" y2="250" stroke="#2a2a3a" stroke-width="1"/>
+            <line x1="80" y1="60" x2="780" y2="60" stroke="#2a2a3a" stroke-width="0.5"/>
+            <line x1="80" y1="145" x2="780" y2="145" stroke="#2a2a3a" stroke-width="0.5"/>
+            <line x1="80" y1="235" x2="780" y2="235" stroke="#2a2a3a" stroke-width="0.5"/>
+
+            <!-- Dynamic waveforms -->
+            <path id="cot-sw-path" d="" fill="none" stroke="#f5a623" stroke-width="2"/>
+            <path id="cot-il-path" d="" fill="none" stroke="#bb86fc" stroke-width="2"/>
+            <path id="cot-vout-path" d="" fill="none" stroke="#00e676" stroke-width="2"/>
+
+            <!-- T_ON annotation -->
+            <line id="cot-ton-start" x1="100" y1="5" x2="100" y2="55" stroke="#18ffff" stroke-width="1" stroke-dasharray="2,2"/>
+            <line id="cot-ton-end" x1="200" y1="5" x2="200" y2="55" stroke="#18ffff" stroke-width="1" stroke-dasharray="2,2"/>
+            <line id="cot-ton-arrow" x1="100" y1="8" x2="200" y2="8" stroke="#18ffff" stroke-width="1.5"/>
+            <text id="cot-ton-text" x="150" y="18" fill="#18ffff" font-family="JetBrains Mono" font-size="9" text-anchor="middle">T_ON</text>
+        </svg>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 16: TRADEOFF COMPARISON -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">15</div>
+    <h2>Control Technique Tradeoffs</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Criterion</th>
+                <th>VM-PWM</th>
+                <th>Peak CMC-PWM</th>
+                <th>PFM / Burst</th>
+                <th>Hysteretic</th>
+                <th>COT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Switching freq</td>
+                <td>Fixed</td>
+                <td>Fixed</td>
+                <td>Variable (low)</td>
+                <td>Variable</td>
+                <td>Pseudo-fixed</td>
+            </tr>
+            <tr>
+                <td>Transient response</td>
+                <td><span class="accent-red">Slow</span></td>
+                <td>Medium</td>
+                <td>Slow (mode change)</td>
+                <td><span class="accent-green">Fastest</span></td>
+                <td><span class="accent-green">Very fast</span></td>
+            </tr>
+            <tr>
+                <td>Light-load efficiency</td>
+                <td><span class="accent-red">Poor</span></td>
+                <td><span class="accent-red">Poor</span></td>
+                <td><span class="accent-green">Excellent</span></td>
+                <td><span class="accent-green">Good</span></td>
+                <td>Good (with PFM)</td>
+            </tr>
+            <tr>
+                <td>EMI predictability</td>
+                <td><span class="accent-green">Best</span></td>
+                <td><span class="accent-green">Good</span></td>
+                <td><span class="accent-red">Poor</span></td>
+                <td><span class="accent-red">Poor</span></td>
+                <td>Good</td>
+            </tr>
+            <tr>
+                <td>Output ripple</td>
+                <td><span class="accent-green">Low</span></td>
+                <td>Low</td>
+                <td>Higher (burst)</td>
+                <td>Set by hysteresis</td>
+                <td>Low</td>
+            </tr>
+            <tr>
+                <td>Compensation</td>
+                <td>Type III</td>
+                <td>Type II + slope</td>
+                <td>Minimal</td>
+                <td>None</td>
+                <td>None / minimal</td>
+            </tr>
+            <tr>
+                <td>Design complexity</td>
+                <td>High</td>
+                <td>Medium</td>
+                <td>Low</td>
+                <td>Low</td>
+                <td>Low–Medium</td>
+            </tr>
+            <tr>
+                <td>Ceramic cap support</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>ESR-dependent</td>
+                <td>Variant-dependent</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 17: APPLICATION SELECTION GUIDE -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">16</div>
+    <h2>Choosing the Right Technique</h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:0.5em;">
+        <div class="card" style="border-left: 3px solid var(--amber);">
+            <h3 style="color:var(--amber);">Server / Telecom PoL</h3>
+            <p>High current (20-100 A), tight transient spec, all-ceramic outputs.</p>
+            <p><strong>Best fit:</strong> <span class="accent-green">COT (D-CAP2/3)</span> or peak CMC with fast error amp. Multi-phase interleaving common.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--green);">
+            <h3 style="color:var(--green);">Battery-Powered IoT</h3>
+            <p>Ultra-low quiescent current, wide V<sub>IN</sub> range (single cell Li-ion), months on a coin cell.</p>
+            <p><strong>Best fit:</strong> <span class="accent-green">PFM / burst mode</span> with automatic PWM crossover at higher loads.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--purple);">
+            <h3 style="color:var(--purple);">Automotive Power Rail</h3>
+            <p>Wide V<sub>IN</sub> (4-42 V), strict EMI (CISPR 25), high reliability, AEC-Q100.</p>
+            <p><strong>Best fit:</strong> <span class="accent-green">Fixed-frequency CMC-PWM</span> with spread-spectrum clocking and external sync.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--cyan);">
+            <h3 style="color:var(--cyan);">FPGA / CPU Core Rail</h3>
+            <p>Sub-1V output, extreme transient requirements (di/dt > 100 A/µs), tight ripple.</p>
+            <p><strong>Best fit:</strong> <span class="accent-green">Multi-phase COT</span> with adaptive on-time. Intel SVID / AMD SVI3 interfaces.</p>
+        </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:0.5em;">
+        <p><strong class="accent-amber">Modern converters are hybrid:</strong> Most production ICs implement a PWM/PFM auto-switching architecture — PWM at medium-to-heavy loads for low ripple and predictable EMI, transitioning to PFM or burst mode at light loads for efficiency. The lines between categories are increasingly blurred.</p>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 18: INTERACTIVE LOAD TRANSIENT -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">17</div>
+    <h2>Interactive: Load Transient Response</h2>
+    <p>Click to apply a load step and compare how different control techniques respond. Observe overshoot, undershoot, and recovery time.</p>
+
+    <div class="controls-row">
+        <button class="ctrl-btn active" onclick="setTransientMode('pwm')" id="trans-btn-pwm">VM-PWM</button>
+        <button class="ctrl-btn" onclick="setTransientMode('cmc')" id="trans-btn-cmc">Peak CMC</button>
+        <button class="ctrl-btn" onclick="setTransientMode('cot')" id="trans-btn-cot">COT</button>
+        <button class="ctrl-btn" onclick="setTransientMode('hyst')" id="trans-btn-hyst">Hysteretic</button>
+        <span style="flex:1;"></span>
+        <button class="ctrl-btn" onclick="triggerTransient()" style="border-color:var(--amber);color:var(--amber);">⚡ Apply Load Step</button>
+    </div>
+
+    <div class="svg-container">
+        <svg id="trans-svg" viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="max-height:230px;">
+            <!-- Labels -->
+            <text x="15" y="35" fill="#00e676" font-family="JetBrains Mono" font-size="11">V<tspan baseline-shift="sub" font-size="8">OUT</tspan></text>
+            <text x="15" y="195" fill="#bb86fc" font-family="JetBrains Mono" font-size="11">I<tspan baseline-shift="sub" font-size="8">LOAD</tspan></text>
+
+            <!-- Axes -->
+            <line x1="80" y1="10" x2="80" y2="270" stroke="#2a2a3a" stroke-width="1"/>
+            <!-- VOUT reference line -->
+            <line x1="80" y1="70" x2="780" y2="70" stroke="#f5a623" stroke-width="0.5" stroke-dasharray="4,4"/>
+            <text x="785" y="74" fill="#f5a623" font-family="JetBrains Mono" font-size="9">V<tspan baseline-shift="sub" font-size="7">REF</tspan></text>
+            <!-- Time axis -->
+            <line x1="80" y1="155" x2="780" y2="155" stroke="#2a2a3a" stroke-width="0.5"/>
+            <line x1="80" y1="260" x2="780" y2="260" stroke="#2a2a3a" stroke-width="0.5"/>
+
+            <!-- Dynamic paths -->
+            <path id="trans-vout-path" d="" fill="none" stroke="#00e676" stroke-width="2.5"/>
+            <path id="trans-iload-path" d="" fill="none" stroke="#bb86fc" stroke-width="2"/>
+
+            <!-- Info text -->
+            <text id="trans-info" x="400" y="275" fill="#9a9a9a" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Click "Apply Load Step" to simulate a 0→5A transient</text>
+        </svg>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 19: DIGITAL CONTROL -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">18</div>
+    <h2>Digital Control &amp; DPWM</h2>
+    <p>Digital control replaces the analogue error amplifier and compensator with an ADC, digital compensator (typically a PID implemented in an FPGA or DSP), and a digital PWM (DPWM) module.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Architecture</h3>
+            <div class="flow-row" style="justify-content:flex-start;">
+                <div class="flow-box" style="border-color:var(--green);">V<sub>OUT</sub></div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box" style="border-color:var(--cyan);">ADC</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box" style="border-color:var(--purple);">PID</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-box" style="border-color:var(--amber);">DPWM</div>
+            </div>
+
+            <h3 style="margin-top:0.5em;">Advantages</h3>
+            <ul>
+                <li>Coefficients can be tuned without hardware changes</li>
+                <li>Advanced algorithms: predictive, deadbeat, model-predictive control (MPC)</li>
+                <li>Non-linear and adaptive compensation possible</li>
+                <li>Multi-loop, multi-phase coordination in a single controller</li>
+                <li>Power management integration — sequencing, telemetry, PMBus</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Challenges</h3>
+            <ul>
+                <li>ADC resolution limits DC accuracy — need 10-12 bits at > 1 MSPS</li>
+                <li>DPWM resolution — need sub-nanosecond edge placement for tight ripple at high f<sub>SW</sub></li>
+                <li>Quantisation limit-cycle oscillations</li>
+                <li>Latency through ADC → compute → DPWM adds phase delay</li>
+                <li>Higher quiescent power than analogue controllers</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Industry adoption</h3>
+            <p>Digital control is standard in server VRMs (Intel VR14, AMD SVI3), telecom rectifiers, and solar inverters. Products from Infineon (XDPS21xx), TI (UCD3138), and Renesas (ISL689xx) implement fully digital multi-phase controllers.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 20: ADVANCED & EMERGING TECHNIQUES -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">19</div>
+    <h2>Advanced &amp; Emerging Techniques</h2>
+
+    <div class="card-grid card-grid-3" style="margin-top:0.5em;">
+        <div class="card">
+            <h3 style="color:var(--amber);">Adaptive On-Time (AOT)</h3>
+            <p>Extends COT by dynamically adjusting T<sub>ON</sub> based on V<sub>IN</sub> and V<sub>OUT</sub> measurements in real time, rather than using a fixed timer. Maintains tighter frequency regulation across wider operating ranges.</p>
+            <p class="dim" style="font-size:0.5em;">Used in MPS MP28xx, TI TPS543xxx</p>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--green);">Spread-Spectrum Clocking</h3>
+            <p>Deliberately modulates the switching frequency (typically ±5-10%) to spread EMI energy across a wider bandwidth, reducing peak conducted and radiated emissions. Essential for automotive CISPR 25 compliance.</p>
+            <p class="dim" style="font-size:0.5em;">Standard in automotive-grade converters</p>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--purple);">Model-Predictive Control</h3>
+            <p>Uses a mathematical model of the converter to predict future output behaviour and compute the optimal control action one or more steps ahead. Achieves near-deadbeat transient response — settles in 1-2 switching cycles.</p>
+            <p class="dim" style="font-size:0.5em;">Research / high-end FPGA implementations</p>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--cyan);">V² Control</h3>
+            <p>A derivative of hysteretic control that uses V<sub>OUT</sub> directly (rather than the error signal) as the ramp. Extremely fast — the output capacitor ESR provides the ramp. Used in some VRM controllers.</p>
+            <p class="dim" style="font-size:0.5em;">ON Semi NCP302x, Renesas ISL95xxx</p>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--red);">AI / ML-Assisted Control</h3>
+            <p>Reinforcement learning and neural networks used to auto-tune compensator coefficients, predict load transients, and optimise efficiency maps. Still largely in research, but showing promise for complex multi-domain power systems.</p>
+            <p class="dim" style="font-size:0.5em;">Research: ETH Zurich, CPES Virginia Tech</p>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--amber);">Coupled-Inductor Multi-Phase</h3>
+            <p>Magnetically coupled inductors in multi-phase converters improve transient response and reduce ripple beyond what discrete inductors achieve. Requires tight coupling control but enables faster di/dt.</p>
+            <p class="dim" style="font-size:0.5em;">Server VRMs: Infineon, Renesas, MPS</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 21: COMPENSATION DESIGN -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">20</div>
+    <h2>Compensation Design Overview</h2>
+    <p>For PWM controllers with error amplifiers, the compensator shapes the loop gain to achieve adequate phase margin (> 45°) and gain margin (> 10 dB) for stable operation.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Type II Compensator</h3>
+            <p>One zero, one pole (plus the origin pole from the integrator). Provides up to 90° of phase boost. Sufficient for current-mode control where the power stage has a single-pole response.</p>
+            <ul>
+                <li>Components: R1, R2, C1, C2 around an op-amp</li>
+                <li>Place zero at the LC double pole frequency</li>
+                <li>Place high-frequency pole at half the switching frequency</li>
+                <li>Set mid-band gain for desired crossover frequency (typically f<sub>SW</sub>/5 to f<sub>SW</sub>/10)</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Type III Compensator</h3>
+            <p>Two zeros, two poles (plus origin). Provides up to 180° of phase boost. Required for voltage-mode control where the LC filter introduces a resonant double pole with 180° phase drop.</p>
+            <ul>
+                <li>Components: R1, R2, R3, C1, C2, C3</li>
+                <li>Place both zeros at or below the LC resonance</li>
+                <li>Place both poles at or above f<sub>SW</sub>/2</li>
+                <li>More sensitive to component tolerances than Type II</li>
+            </ul>
+
+            <div class="highlight-box" style="margin-top:0.5em;">
+                <p><strong class="accent-green">COT and hysteretic controllers skip this entirely</strong> — their ripple-based comparator architecture is inherently stable without external compensation networks.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 22: EMI CONSIDERATIONS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">21</div>
+    <h2>EMI &amp; Frequency Spectrum</h2>
+    <p>The choice of control technique directly impacts the EMI signature of the converter, which determines filter size and regulatory compliance.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Fixed-frequency (PWM)</h3>
+            <ul>
+                <li>Energy concentrated at f<sub>SW</sub> and its harmonics (2f, 3f, 4f...)</li>
+                <li>Narrow, tall spectral peaks — easy to target with LC filters tuned to f<sub>SW</sub></li>
+                <li>Predictable — can be designed to avoid sensitive frequency bands</li>
+                <li>Spread-spectrum modulation smears peaks but doesn't eliminate them</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Variable-frequency (PFM, Hysteretic, COT)</h3>
+            <ul>
+                <li>Energy spread across a wide bandwidth</li>
+                <li>Lower peak amplitudes but broader spectral floor</li>
+                <li>Harder to filter — no single dominant frequency to target</li>
+                <li>COT with pseudo-fixed frequency is a good middle ground</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Design strategies</h3>
+            <table>
+                <tr><th>Technique</th><th>EMI Approach</th></tr>
+                <tr><td>PWM</td><td>Input LC filter tuned to f<sub>SW</sub>; shielded inductor</td></tr>
+                <tr><td>PWM + SS</td><td>Spread spectrum ±6%; relaxes filter Q requirement</td></tr>
+                <tr><td>PFM</td><td>Wideband filtering; may need common-mode choke</td></tr>
+                <tr><td>COT</td><td>Near-fixed f<sub>SW</sub> enables standard filter; PCB layout critical</td></tr>
+                <tr><td>Hysteretic</td><td>Most challenging; requires careful shielding + filtering</td></tr>
+            </table>
+
+            <div class="highlight-box" style="margin-top:0.5em;">
+                <p><strong class="accent-purple">Automotive EMI (CISPR 25 Class 5):</strong> Fixed-frequency PWM with spread-spectrum clocking is the standard approach. Variable-frequency techniques require significantly more EMI engineering effort.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 23: MULTI-PHASE DESIGN -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">22</div>
+    <h2>Multi-Phase Converters</h2>
+    <p>High-current applications (CPU VRMs, server PoL) use multiple interleaved converter phases to share current, reduce ripple, and improve transient response. The control technique must support phase interleaving.</p>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>How interleaving works</h3>
+            <ul>
+                <li>N phases operate at the same frequency but phase-shifted by 360°/N</li>
+                <li>Ripple currents partially cancel at the output — effective ripple frequency is N × f<sub>SW</sub></li>
+                <li>Smaller output capacitance needed for the same ripple specification</li>
+                <li>Thermal load distributed across N inductors and FET sets</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Phase shedding</h3>
+            <p>At light loads, inactive phases are disabled to reduce switching and gate-drive losses. The controller dynamically adjusts the number of active phases based on load current — maintaining efficiency across the full range.</p>
+        </div>
+        <div>
+            <h3>Control compatibility</h3>
+            <table>
+                <tr><th>Technique</th><th>Multi-phase support</th></tr>
+                <tr><td>PWM (VM/CMC)</td><td><span class="accent-green">Excellent</span> — master clock distributes phase-shifted triggers</td></tr>
+                <tr><td>COT</td><td><span class="accent-green">Good</span> — phase interleaving via timed offsets; D-CAP2/3 support it natively</td></tr>
+                <tr><td>Hysteretic</td><td><span class="accent-red">Difficult</span> — no common clock reference; phases can clash</td></tr>
+                <tr><td>PFM</td><td><span class="accent-amber">Moderate</span> — phase shedding straightforward; interleaving complex</td></tr>
+            </table>
+
+            <div class="highlight-box" style="margin-top:0.5em;">
+                <p><strong class="accent-cyan">State of the art:</strong> Server VRMs now use 6-12 phase digital multi-phase controllers (Infineon XDPS2222, Renesas ISL69260) with per-phase current balancing, auto phase shedding, and PMBus telemetry.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 24: FUTURE DIRECTIONS -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">23</div>
+    <h2>Future Directions</h2>
+
+    <div class="card-grid card-grid-2" style="margin-top:0.5em;">
+        <div class="card" style="border-left: 3px solid var(--amber);">
+            <h3 style="color:var(--amber);">GaN &amp; SiC Wide-Bandgap</h3>
+            <p>GaN FETs switch at 5-10 MHz with minimal losses, enabling smaller passives and faster transients. Control loops must keep up — ADC/comparator speeds become the bottleneck. COT and digital control are best positioned for multi-MHz operation.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--green);">
+            <h3 style="color:var(--green);">Fully Integrated Power Modules</h3>
+            <p>The trend toward integrating FETs, controller, inductor, and passives in a single package (e.g., TI LMZM33xxx, MPS MPM3xxx) is driving control architectures toward zero-external-component designs — D-CAP3 and similar are ideal.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--purple);">
+            <h3 style="color:var(--purple);">48V Direct-to-PoL</h3>
+            <p>Data centre power is moving from 12V to 48V distribution. Converters like the Vicor NBM, Infineon hybrid LLC, and TI TLVM series use new topologies (sigma, switched-capacitor, hybrid) that require hybrid control combining resonant and PWM techniques.</p>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--cyan);">
+            <h3 style="color:var(--cyan);">Autonomous Tuning &amp; Digital Twins</h3>
+            <p>FPGA-based controllers with on-chip system identification can measure the plant transfer function in real-time and auto-tune compensation. Digital twin models running alongside the converter enable predictive maintenance and lifetime estimation.</p>
+        </div>
+    </div>
+
+    <div class="highlight-box" style="margin-top:0.5em;">
+        <p><strong class="accent-amber">The convergence thesis:</strong> Future converters will blur all boundaries — digital controllers running hybrid PWM/COT algorithms with AI-assisted tuning on GaN power stages, all in a single package. The winner is whoever integrates best, not who has the best single technique.</p>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 25: SUMMARY -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">24</div>
+    <h2>Summary &amp; Key Takeaways</h2>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>What we covered</h3>
+            <ul>
+                <li>Voltage-mode vs current-mode control fundamentals</li>
+                <li>PWM: fixed-frequency, predictable EMI, mature compensation theory</li>
+                <li>Peak, valley, and average current-mode variants</li>
+                <li>PFM and burst mode for light-load efficiency</li>
+                <li>Hysteretic control — fastest transient, simplest loop</li>
+                <li>COT and its evolution: classic, emulated ripple, D-CAP family</li>
+                <li>Digital DPWM, model-predictive, and AI-assisted control</li>
+                <li>Multi-phase interleaving and phase shedding</li>
+                <li>EMI implications of each technique</li>
+                <li>Application-specific selection guidelines</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Design decision tree</h3>
+            <div class="flow-row" style="flex-direction:column; align-items:flex-start; gap:0.3em;">
+                <div class="flow-box" style="border-color:var(--amber); width:90%;">Need predictable EMI? → <span class="accent-amber">Fixed-frequency PWM</span></div>
+                <div class="flow-box" style="border-color:var(--green); width:90%;">Battery / standby efficiency critical? → <span class="accent-green">PFM / burst mode</span></div>
+                <div class="flow-box" style="border-color:var(--purple); width:90%;">Fastest transient response? → <span class="accent-purple">COT or hysteretic</span></div>
+                <div class="flow-box" style="border-color:var(--cyan); width:90%;">Fewest external components? → <span class="accent-cyan">D-CAP3 / integrated</span></div>
+                <div class="flow-box" style="border-color:var(--red); width:90%;">Multi-phase server VRM? → <span class="accent-red">Digital multi-phase</span></div>
+            </div>
+
+            <h3 style="margin-top:0.5em;">Further reading</h3>
+            <p style="font-size:0.5em; color:var(--text-muted);">
+                Erickson &amp; Maksimović, <em>Fundamentals of Power Electronics</em>, 3rd ed. ·
+                Ridley, <em>Power Supply Design</em>, Vol. 1-3 ·
+                TI SLVA057, <em>Understanding and Applying Current-Mode Control Theory</em> ·
+                TI SLVA281, <em>Voltage Mode vs Current Mode</em> ·
+                NPTEL, <em>Switched Mode Power Conversion</em> (course)
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 26: REFERENCES -->
+<!-- ============================================================ -->
+<section>
+    <div class="slide-label">25</div>
+    <h2>References &amp; Resources</h2>
+
+    <div class="two-col" style="margin-top:0.5em;">
+        <div>
+            <h3>Textbooks</h3>
+            <ul>
+                <li style="font-size:0.5em;">Erickson &amp; Maksimović, <em>Fundamentals of Power Electronics</em>, 3rd ed., Springer, 2020</li>
+                <li style="font-size:0.5em;">Kazimierczuk, <em>Pulse-Width Modulated DC-DC Power Converters</em>, 2nd ed., Wiley, 2015</li>
+                <li style="font-size:0.5em;">Ridley, <em>Power Supply Design</em>, Vol. 1: Control, Ridley Engineering, 2012</li>
+                <li style="font-size:0.5em;">Pressman, Billings &amp; Morey, <em>Switching Power Supply Design</em>, 3rd ed., McGraw-Hill, 2009</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Application Notes</h3>
+            <ul>
+                <li style="font-size:0.5em;">TI SLVA057 — Understanding Current-Mode Control Theory</li>
+                <li style="font-size:0.5em;">TI SLVA281 — Voltage Mode vs Current Mode</li>
+                <li style="font-size:0.5em;">TI SLVA470 — D-CAP2 Operation</li>
+                <li style="font-size:0.5em;">TI SLYT084 — Under the Hood of a DC-DC Boost Converter</li>
+                <li style="font-size:0.5em;">Analog Devices AN-1484 — Designing Second/Third Stage Output Filters</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Online Resources</h3>
+            <ul>
+                <li style="font-size:0.5em;">NPTEL — Switched Mode Power Conversion (IIT Bombay / Prof. Ramanarayanan)</li>
+                <li style="font-size:0.5em;">Ridley Engineering — ridleyengineering.com (loop analysis tools)</li>
+                <li style="font-size:0.5em;">TI Power Supply Design Seminar (PSDS) — annual publications</li>
+                <li style="font-size:0.5em;">Biricha Digital — power supply training courses</li>
+                <li style="font-size:0.5em;">CPES (Virginia Tech) — research papers on advanced control</li>
+            </ul>
+
+            <h3 style="margin-top:0.5em;">Simulation Tools</h3>
+            <ul>
+                <li style="font-size:0.5em;">MATLAB/Simulink — Simscape Electrical (control loop modelling)</li>
+                <li style="font-size:0.5em;">LTspice — free SPICE simulator (Analog Devices)</li>
+                <li style="font-size:0.5em;">PLECS — specialised power electronics simulator</li>
+                <li style="font-size:0.5em;">TI WEBENCH — online power design tool</li>
+            </ul>
+        </div>
+    </div>
+    <p style="font-size:0.45em; color:var(--text-dim); margin-top:0.8em; text-align:center;">Brendan Lynskey · 2025 · Educational use</p>
+</section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<!-- Reveal.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+
+<script>
+Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+    transition: 'fade',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    plugins: [RevealHighlight],
+    pdfSeparateFragments: false
+});
+
+/* ============================================================
+   INTERACTIVE: PWM WAVEFORMS (Slide 07)
+   ============================================================ */
+let pwmMode = 'vm';
+function setPwmMode(mode) {
+    pwmMode = mode;
+    document.getElementById('btn-vm').classList.toggle('active', mode === 'vm');
+    document.getElementById('btn-cm').classList.toggle('active', mode === 'cm');
+    drawPWM();
+}
+
+function drawPWM() {
+    const duty = parseInt(document.getElementById('pwm-duty').value);
+    document.getElementById('pwm-duty-val').textContent = duty + '%';
+    const D = duty / 100;
+    const xStart = 90, xEnd = 780, yGateHi = 18, yGateLo = 58;
+    const periods = 3;
+    const pWidth = (xEnd - xStart) / periods;
+
+    // Gate drive
+    let gatePath = `M ${xStart} ${yGateLo}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        const xOn = x0 + D * pWidth;
+        gatePath += ` L ${x0} ${yGateLo} L ${x0} ${yGateHi} L ${xOn} ${yGateHi} L ${xOn} ${yGateLo}`;
+    }
+    gatePath += ` L ${xEnd} ${yGateLo}`;
+    document.getElementById('pwm-gate-path').setAttribute('d', gatePath);
+
+    // Inductor current (triangular)
+    const ilMid = 130, ilAmp = 20;
+    let ilPath = `M ${xStart} ${ilMid}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        const xOn = x0 + D * pWidth;
+        ilPath += ` L ${xOn} ${ilMid - ilAmp} L ${x0 + pWidth} ${ilMid + ilAmp * 0.5}`;
+    }
+    document.getElementById('pwm-il-path').setAttribute('d', ilPath);
+
+    // VOUT (slight ripple around reference)
+    const vRef = 222, vRipple = 4;
+    let vPath = `M ${xStart} ${vRef}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        const xOn = x0 + D * pWidth;
+        const xMid = x0 + pWidth * 0.5;
+        vPath += ` Q ${xOn} ${vRef - vRipple} ${xMid} ${vRef} Q ${x0 + pWidth} ${vRef + vRipple * 0.5} ${x0 + pWidth} ${vRef}`;
+    }
+    document.getElementById('pwm-vout-path').setAttribute('d', vPath);
+
+    // Ramp / comparator
+    if (pwmMode === 'vm') {
+        // Sawtooth ramp with VCOMP line
+        const rampTop = 262, rampBot = 292;
+        let rampPath = `M ${xStart} ${rampBot}`;
+        for (let i = 0; i < periods; i++) {
+            const x0 = xStart + i * pWidth;
+            rampPath += ` L ${x0} ${rampBot} L ${x0 + pWidth} ${rampTop} L ${x0 + pWidth} ${rampBot}`;
+        }
+        document.getElementById('pwm-ramp-path').setAttribute('d', rampPath);
+        const compY = rampBot - D * (rampBot - rampTop);
+        document.getElementById('pwm-comp-line').setAttribute('y1', compY);
+        document.getElementById('pwm-comp-line').setAttribute('y2', compY);
+        document.getElementById('pwm-comp-line').style.display = '';
+    } else {
+        // Current-mode: sensed current ramp
+        const rampBot = 292, rampTop = 265;
+        let rampPath = `M ${xStart} ${rampBot}`;
+        for (let i = 0; i < periods; i++) {
+            const x0 = xStart + i * pWidth;
+            const xOn = x0 + D * pWidth;
+            rampPath += ` L ${x0} ${rampBot} L ${xOn} ${rampTop} L ${xOn} ${rampBot}`;
+        }
+        document.getElementById('pwm-ramp-path').setAttribute('d', rampPath);
+        document.getElementById('pwm-comp-line').setAttribute('y1', rampTop);
+        document.getElementById('pwm-comp-line').setAttribute('y2', rampTop);
+        document.getElementById('pwm-comp-line').style.display = '';
+    }
+}
+
+document.getElementById('pwm-duty').addEventListener('input', drawPWM);
+drawPWM();
+
+/* ============================================================
+   INTERACTIVE: EFFICIENCY CURVES (Slide 11)
+   ============================================================ */
+function drawEfficiency() {
+    const loadVal = parseInt(document.getElementById('eff-load').value);
+    const loadMA = Math.pow(10, loadVal / 100 * 4 - 1); // 0.1 to 1000 mA log scale
+    document.getElementById('eff-load-val').textContent = loadMA < 1 ? loadMA.toFixed(2) + ' mA' : loadMA < 100 ? loadMA.toFixed(1) + ' mA' : Math.round(loadMA) + ' mA';
+
+    const xStart = 80, xEnd = 760, yTop = 20, yBot = 280;
+    const points = 100;
+
+    function logX(mA) {
+        const logMin = -1, logMax = 3; // 0.1 to 1000
+        const t = (Math.log10(mA) - logMin) / (logMax - logMin);
+        return xStart + t * (xEnd - xStart);
+    }
+    function effY(eff) {
+        return yBot - (eff / 100) * (yBot - yTop);
+    }
+
+    // PWM efficiency model: poor at light load, peaks ~85-92% at moderate load
+    function pwmEff(mA) {
+        const pSw = 0.5; // fixed switching loss mW
+        const pCond = 0.03 * mA; // conduction loss
+        const pOut = 3.3 * mA; // output power (3.3V rail)
+        if (pOut < 0.01) return 5;
+        return Math.min(95, Math.max(5, (pOut / (pOut + pSw + pCond)) * 100));
+    }
+
+    // PFM efficiency: high at light load, slightly lower at heavy load
+    function pfmEff(mA) {
+        const pQ = 0.005; // quiescent power mW
+        const pSw = 0.003 * mA; // proportional switching loss
+        const pCond = 0.035 * mA;
+        const pOut = 3.3 * mA;
+        if (pOut < 0.001) return 10;
+        return Math.min(93, Math.max(10, (pOut / (pOut + pQ + pSw + pCond)) * 100));
+    }
+
+    // Auto PWM/PFM: best of both
+    function autoEff(mA) {
+        return Math.max(pwmEff(mA), pfmEff(mA));
+    }
+
+    let pwmPath = '', pfmPath = '', autoPath = '';
+    for (let i = 0; i <= points; i++) {
+        const t = i / points;
+        const mA = Math.pow(10, -1 + t * 4);
+        const px = logX(mA);
+        const cmd = i === 0 ? 'M' : 'L';
+        pwmPath += `${cmd} ${px.toFixed(1)} ${effY(pwmEff(mA)).toFixed(1)} `;
+        pfmPath += `${cmd} ${px.toFixed(1)} ${effY(pfmEff(mA)).toFixed(1)} `;
+        autoPath += `${cmd} ${px.toFixed(1)} ${effY(autoEff(mA)).toFixed(1)} `;
+    }
+    document.getElementById('eff-pwm-path').setAttribute('d', pwmPath);
+    document.getElementById('eff-pfm-path').setAttribute('d', pfmPath);
+    document.getElementById('eff-auto-path').setAttribute('d', autoPath);
+
+    // Marker
+    const mx = logX(loadMA);
+    document.getElementById('eff-marker').setAttribute('x1', mx);
+    document.getElementById('eff-marker').setAttribute('x2', mx);
+    const pwmE = pwmEff(loadMA);
+    const pfmE = pfmEff(loadMA);
+    document.getElementById('eff-dot-pwm').setAttribute('cx', mx);
+    document.getElementById('eff-dot-pwm').setAttribute('cy', effY(pwmE));
+    document.getElementById('eff-dot-pfm').setAttribute('cx', mx);
+    document.getElementById('eff-dot-pfm').setAttribute('cy', effY(pfmE));
+    document.getElementById('eff-pwm-text').textContent = `PWM: ${pwmE.toFixed(1)}%`;
+    document.getElementById('eff-pfm-text').textContent = `PFM: ${pfmE.toFixed(1)}%`;
+}
+document.getElementById('eff-load').addEventListener('input', drawEfficiency);
+drawEfficiency();
+
+/* ============================================================
+   INTERACTIVE: COT TIMING (Slide 15)
+   ============================================================ */
+function drawCOT() {
+    const vin = parseInt(document.getElementById('cot-vin').value);
+    const vout = 3.3;
+    const fTarget = 1e6; // 1 MHz target
+    const ton = vout / (vin * fTarget); // seconds
+    const D = vout / vin;
+    const period = ton / D;
+    const fActual = 1 / period;
+
+    document.getElementById('cot-vin-val').textContent = vin + ' V';
+    document.getElementById('cot-ton-val').textContent = (ton * 1e9).toFixed(0) + ' ns';
+    document.getElementById('cot-fsw-val').textContent = (fActual / 1e6).toFixed(2) + ' MHz';
+
+    const xStart = 80, xEnd = 780;
+    const periods = 4;
+    const pWidth = (xEnd - xStart) / periods;
+    const onWidth = D * pWidth;
+
+    // SW node (square wave between VIN and 0)
+    const swHi = 20, swLo = 55;
+    let swPath = `M ${xStart} ${swLo}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        swPath += ` L ${x0} ${swLo} L ${x0} ${swHi} L ${x0 + onWidth} ${swHi} L ${x0 + onWidth} ${swLo}`;
+    }
+    swPath += ` L ${xEnd} ${swLo}`;
+    document.getElementById('cot-sw-path').setAttribute('d', swPath);
+
+    // Inductor current
+    const ilMid = 120, ilAmp = 18;
+    let ilPath = `M ${xStart} ${ilMid}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        ilPath += ` L ${x0 + onWidth} ${ilMid - ilAmp} L ${x0 + pWidth} ${ilMid + ilAmp * 0.6}`;
+    }
+    document.getElementById('cot-il-path').setAttribute('d', ilPath);
+
+    // VOUT ripple
+    const voRef = 205, voRip = 3;
+    let voPath = `M ${xStart} ${voRef}`;
+    for (let i = 0; i < periods; i++) {
+        const x0 = xStart + i * pWidth;
+        const xMid = x0 + pWidth * 0.5;
+        voPath += ` Q ${x0 + onWidth} ${voRef - voRip} ${xMid} ${voRef} Q ${x0 + pWidth} ${voRef + voRip * 0.4} ${x0 + pWidth} ${voRef}`;
+    }
+    document.getElementById('cot-vout-path').setAttribute('d', voPath);
+
+    // T_ON annotation
+    const tonPx = onWidth;
+    document.getElementById('cot-ton-start').setAttribute('x1', xStart);
+    document.getElementById('cot-ton-start').setAttribute('x2', xStart);
+    document.getElementById('cot-ton-end').setAttribute('x1', xStart + tonPx);
+    document.getElementById('cot-ton-end').setAttribute('x2', xStart + tonPx);
+    document.getElementById('cot-ton-arrow').setAttribute('x1', xStart);
+    document.getElementById('cot-ton-arrow').setAttribute('x2', xStart + tonPx);
+    document.getElementById('cot-ton-text').setAttribute('x', xStart + tonPx / 2);
+}
+document.getElementById('cot-vin').addEventListener('input', drawCOT);
+drawCOT();
+
+/* ============================================================
+   INTERACTIVE: LOAD TRANSIENT (Slide 18)
+   ============================================================ */
+let transientMode = 'pwm';
+let transientAnim = null;
+
+function setTransientMode(mode) {
+    transientMode = mode;
+    ['pwm','cmc','cot','hyst'].forEach(m => {
+        document.getElementById('trans-btn-' + m).classList.toggle('active', m === mode);
+    });
+    resetTransient();
+}
+
+function resetTransient() {
+    if (transientAnim) cancelAnimationFrame(transientAnim);
+    const xS = 80, xE = 780;
+    // Static lines
+    document.getElementById('trans-vout-path').setAttribute('d', `M ${xS} 70 L ${xE} 70`);
+    document.getElementById('trans-iload-path').setAttribute('d', `M ${xS} 230 L ${xE} 230`);
+    document.getElementById('trans-info').textContent = 'Click "Apply Load Step" to simulate a 0→5A transient';
+}
+resetTransient();
+
+function triggerTransient() {
+    if (transientAnim) cancelAnimationFrame(transientAnim);
+
+    const xS = 80, xE = 780, totalW = xE - xS;
+    const stepX = 0.2; // step happens at 20% of x range
+    const vRef = 70, vScale = 60; // pixels of undershoot
+    const iLow = 240, iHigh = 195;
+
+    // Control-technique parameters
+    const params = {
+        'pwm':  { undershoot: 1.0, overshoot: 0.3, settleTime: 0.45, ringFreq: 8,  label: 'VM-PWM: ~50 µs settling' },
+        'cmc':  { undershoot: 0.7, overshoot: 0.2, settleTime: 0.30, ringFreq: 10, label: 'Peak CMC: ~30 µs settling' },
+        'cot':  { undershoot: 0.4, overshoot: 0.1, settleTime: 0.15, ringFreq: 14, label: 'COT: ~10 µs settling' },
+        'hyst': { undershoot: 0.25, overshoot: 0.05, settleTime: 0.10, ringFreq: 18, label: 'Hysteretic: ~5 µs settling' }
+    };
+    const p = params[transientMode];
+
+    let progress = 0;
+    function animate() {
+        progress += 0.02;
+        if (progress > 1) progress = 1;
+
+        const numPts = Math.floor(progress * 200);
+        let vPath = `M ${xS} ${vRef}`;
+        let iPath = `M ${xS} ${iLow}`;
+
+        for (let i = 0; i <= numPts; i++) {
+            const t = i / 200;
+            const x = xS + t * totalW;
+
+            // Load current step
+            let iY;
+            if (t < stepX) {
+                iY = iLow;
+            } else {
+                const tRise = (t - stepX) / 0.02;
+                iY = tRise > 1 ? iHigh : iLow + (iHigh - iLow) * Math.min(1, tRise);
+            }
+            iPath += ` L ${x.toFixed(1)} ${iY.toFixed(1)}`;
+
+            // VOUT response
+            let vY;
+            if (t < stepX) {
+                vY = vRef;
+            } else {
+                const tNorm = (t - stepX) / p.settleTime;
+                if (tNorm < 0) {
+                    vY = vRef;
+                } else {
+                    const decay = Math.exp(-tNorm * 3);
+                    const ring = Math.sin(tNorm * p.ringFreq);
+                    const undershootPart = p.undershoot * decay;
+                    const overshootPart = p.overshoot * decay * ring;
+                    vY = vRef + (undershootPart + overshootPart) * vScale;
+                }
+            }
+            vPath += ` L ${x.toFixed(1)} ${vY.toFixed(1)}`;
+        }
+
+        document.getElementById('trans-vout-path').setAttribute('d', vPath);
+        document.getElementById('trans-iload-path').setAttribute('d', iPath);
+        document.getElementById('trans-info').textContent = p.label;
+
+        if (progress < 1) {
+            transientAnim = requestAnimationFrame(animate);
+        }
+    }
+    transientAnim = requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>
