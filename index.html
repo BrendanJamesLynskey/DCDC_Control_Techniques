@@ -41,8 +41,13 @@
     background: var(--bg-primary);
     padding-top: 0.3em !important;
     box-sizing: border-box;
+    height: 800px !important;
     overflow-y: auto !important;
 }
+/* Allow overflow to be visible through Reveal.js wrappers */
+.reveal .slides { overflow: visible !important; }
+.reveal { overflow: visible !important; }
+.reveal .slide-background { overflow: visible !important; }
 /* Thin styled scrollbar */
 .reveal .slides section::-webkit-scrollbar { width: 6px; }
 .reveal .slides section::-webkit-scrollbar-track { background: transparent; }
